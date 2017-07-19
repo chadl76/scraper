@@ -3,7 +3,7 @@ require 'pry'
 require 'csv'
 
 BASE_URL = 'http://sfbay.craigslist.org'
-ADDRESS = 'http://sfbay.craigslist.org/search/sfc/apa'
+ADDRESS = 'http://sfbay.craigslist.org/search/sby/apa'
 
 
 class Scraper
@@ -39,15 +39,33 @@ class Scraper
 
 	def parse_results
 		raw = results
-		binding.pry
+		parsed_info = []
+		#binding.pry
 		raw
-		#raw.each do |result|
-		#	link = result.search('a')[1]
-		#	pp link
-		#end
+		raw.each do |result|
+			link = result.search('a')[0]
+			name = link.text.strip
+			url = BASE_URL + link.attributes["href"].value
+			price = result.search('span.result-price').text
+			location = result.search('span.result-hood').text
+			parsed_info << [name, url, price, location]
+        end
+        
+        parsed_info
+	end
+
+	def save_parsed_results
+		data = parse_results
+		
+		CSV.open("apartments.csv", "w+", headers:true) do |csv_file|
+			data.each do |row|
+				
+				csv_file << row
+			end
+		end
 	end
 end
 
 scrape = Scraper.new
 
-scrape.parse_results
+scrape.save_parsed_results
